@@ -1,0 +1,962 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.1">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">import React, { useState, useMemo, useEffect } from 'react';</p>
+<p class="p1">import { Plus, TrendingUp, Package, DollarSign, BarChart3, Eye, CheckCircle, Trophy, Star, Zap, Target, Award, Calendar } from 'lucide-react';</p>
+<p class="p2"><br></p>
+<p class="p1">const MakeASale = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [items, setItems] = useState([]);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [showQuickAdd, setShowQuickAdd] = useState(false);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [activeTab, setActiveTab] = useState('dashboard');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [reportPeriod, setReportPeriod] = useState('week');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [showCelebration, setShowCelebration] = useState(false);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [lastAction, setLastAction] = useState('');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Sale dialog state</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [showSaleDialog, setShowSaleDialog] = useState(false);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [selectedItemId, setSelectedItemId] = useState(null);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [saleData, setSaleData] = useState({</p>
+<p class="p1"><span class="Apple-converted-space">    </span>soldPrice: '',</p>
+<p class="p1"><span class="Apple-converted-space">    </span>dateListed: '',</p>
+<p class="p1"><span class="Apple-converted-space">    </span>dateSold: new Date().toISOString().split('T')[0]</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Quick add form state</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [quickItem, setQuickItem] = useState({</p>
+<p class="p1"><span class="Apple-converted-space">    </span>name: '',</p>
+<p class="p1"><span class="Apple-converted-space">    </span>paidPrice: '',</p>
+<p class="p1"><span class="Apple-converted-space">    </span>soldPrice: '',</p>
+<p class="p1"><span class="Apple-converted-space">    </span>status: 'listed'</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Sound effects</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const playSound = (type) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const audioContext = new (window.AudioContext || window.webkitAudioContext)();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let frequency = 440;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let duration = 200;</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>switch(type) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>case 'add':</p>
+<p class="p1"><span class="Apple-converted-space">          </span>frequency = 523; // C note</p>
+<p class="p1"><span class="Apple-converted-space">          </span>duration = 150;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>break;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>case 'sale':</p>
+<p class="p1"><span class="Apple-converted-space">          </span>frequency = 659; // E note</p>
+<p class="p1"><span class="Apple-converted-space">          </span>duration = 300;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>break;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>case 'levelup':</p>
+<p class="p1"><span class="Apple-converted-space">          </span>// Play a chord</p>
+<p class="p1"><span class="Apple-converted-space">          </span>[523, 659, 784].forEach((freq, i) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>setTimeout(() =&gt; playTone(audioContext, freq, 400), i * 100);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>});</p>
+<p class="p1"><span class="Apple-converted-space">          </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>case 'achievement':</p>
+<p class="p1"><span class="Apple-converted-space">          </span>frequency = 880; // High A</p>
+<p class="p1"><span class="Apple-converted-space">          </span>duration = 500;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>break;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>default:</p>
+<p class="p1"><span class="Apple-converted-space">          </span>frequency = 440;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>playTone(audioContext, frequency, duration);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>} catch (e) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>console.log('Audio not available');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const playTone = (audioContext, frequency, duration) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const oscillator = audioContext.createOscillator();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const gainNode = audioContext.createGain();</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>oscillator.connect(gainNode);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>gainNode.connect(audioContext.destination);</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>oscillator.type = 'sine';</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>oscillator.start(audioContext.currentTime);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>oscillator.stop(audioContext.currentTime + duration / 1000);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Celebration effect</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const triggerCelebration = (action) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setLastAction(action);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setShowCelebration(true);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setTimeout(() =&gt; setShowCelebration(false), 2000);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const openSaleDialog = (itemId) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const item = items.find(i =&gt; i.id === itemId);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setSelectedItemId(itemId);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setSaleData({</p>
+<p class="p1"><span class="Apple-converted-space">      </span>soldPrice: '',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>dateListed: item ? item.dateAdded : new Date().toISOString().split('T')[0],</p>
+<p class="p1"><span class="Apple-converted-space">      </span>dateSold: new Date().toISOString().split('T')[0]</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setShowSaleDialog(true);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const handleSaleSubmit = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (!saleData.soldPrice || isNaN(saleData.soldPrice)) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>alert('Please enter a valid sold price! 💰');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Update the item's date listed if changed</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (saleData.dateListed) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setItems(prev =&gt; prev.map(item =&gt;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>item.id === selectedItemId<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>? { ...item, dateAdded: saleData.dateListed }</p>
+<p class="p1"><span class="Apple-converted-space">          </span>: item</p>
+<p class="p1"><span class="Apple-converted-space">      </span>));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const soldDateISO = new Date(saleData.dateSold + 'T12:00:00').toISOString();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>markAsSold(selectedItemId, saleData.soldPrice, soldDateISO);</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>setShowSaleDialog(false);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setSaleData({</p>
+<p class="p1"><span class="Apple-converted-space">      </span>soldPrice: '',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>dateListed: '',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>dateSold: new Date().toISOString().split('T')[0]</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setSelectedItemId(null);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const markAsSold = (id, soldPrice, dateSold) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const oldGameStats = calculateGameStats(items);</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>setItems(prev =&gt; prev.map(item =&gt;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>item.id === id<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>? {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>...item,<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>soldPrice: parseFloat(soldPrice) || 0,<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>status: 'sold',<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>dateUpdated: dateSold || new Date().toISOString()</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>: item</p>
+<p class="p1"><span class="Apple-converted-space">    </span>));</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Check for level up after state update</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setTimeout(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>playSound('sale');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>triggerCelebration('SOLD! +25 XP 💰🎉');</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Check level up with updated items</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const updatedItems = items.map(item =&gt;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>item.id === id<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>? {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">              </span>...item,<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">              </span>soldPrice: parseFloat(soldPrice) || 0,<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">              </span>status: 'sold',<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">              </span>dateUpdated: dateSold || new Date().toISOString()</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>: item</p>
+<p class="p1"><span class="Apple-converted-space">      </span>);</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const newGameStats = calculateGameStats(updatedItems);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (newGameStats.level &gt; oldGameStats.level) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>setTimeout(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>playSound('levelup');</p>
+<p class="p1"><span class="Apple-converted-space">          </span>triggerCelebration(`🎉 LEVEL UP! 🎉 Level ${newGameStats.level}! 👑`);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}, 500);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}, 100);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Gamification system</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const calculateGameStats = (items) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const soldItems = items.filter(item =&gt; item.status === 'sold');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const totalProfit = soldItems.reduce((sum, item) =&gt; sum + (item.soldPrice - item.paidPrice), 0);</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Points system</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let points = 0;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>points += items.length * 10; // 10 points per item added</p>
+<p class="p1"><span class="Apple-converted-space">    </span>points += soldItems.length * 25; // 25 points per sale</p>
+<p class="p1"><span class="Apple-converted-space">    </span>points += Math.floor(totalProfit / 10) * 5; // 5 points per $10 profit</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Bonus points for streaks and achievements</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const consecutiveSales = getConsecutiveSales(soldItems);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>points += consecutiveSales * 15; // Streak bonus</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Level calculation (every 100 points = 1 level)</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const level = Math.floor(points / 100) + 1;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const pointsToNextLevel = 100 - (points % 100);</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>return {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>points,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>level,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pointsToNextLevel,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>totalProfit,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>soldCount: soldItems.length,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>listedCount: items.filter(item =&gt; item.status === 'listed').length,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>streak: consecutiveSales</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const getConsecutiveSales = (soldItems) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (soldItems.length === 0) return 0;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Get unique dates of sales and sort them in descending order (most recent first)</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const saleDates = [...new Set(soldItems</p>
+<p class="p1"><span class="Apple-converted-space">      </span>.map(item =&gt; new Date(item.dateUpdated || item.dateAdded).toDateString())</p>
+<p class="p1"><span class="Apple-converted-space">    </span>)].sort((a, b) =&gt; new Date(b) - new Date(a));</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (saleDates.length === 0) return 0;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>let streak = 0;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const today = new Date();</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Check if there was a sale today or yesterday to start the streak</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const mostRecentSale = new Date(saleDates[0]);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const daysDiff = Math.floor((today - mostRecentSale) / (1000 * 60 * 60 * 24));</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// If the most recent sale is more than 1 day old, no current streak</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (daysDiff &gt; 1) return 0;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Count consecutive days with sales</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let currentDate = new Date(saleDates[0]);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>streak = 1; // Count the first sale day</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>for (let i = 1; i &lt; saleDates.length; i++) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const nextSaleDate = new Date(saleDates[i]);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const daysBetween = Math.floor((currentDate - nextSaleDate) / (1000 * 60 * 60 * 24));</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// If the next sale is exactly 1 day before, continue the streak</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (daysBetween === 1) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>streak++;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>currentDate = nextSaleDate;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Break in consecutive days, end streak counting</p>
+<p class="p1"><span class="Apple-converted-space">        </span>break;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>return streak;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const getLevelInfo = (level) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const levels = [</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "Newbie Seller 🌱", icon: "🌱", color: "from-gray-400 to-gray-600", description: "Just getting started! 🎯" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "Deal Hunter 🔍", icon: "🔍", color: "from-blue-400 to-blue-600", description: "Finding sweet deals! 💎" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "Flip Master ⚡", icon: "⚡", color: "from-green-400 to-green-600", description: "Quick flips, quick cash! 💸" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "Profit King 👑", icon: "👑", color: "from-yellow-400 to-yellow-600", description: "Making bank consistently! 🏦" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "Sales Wizard 🧙‍♂️", icon: "🧙‍♂️", color: "from-purple-400 to-purple-600", description: "Pure selling magic! ✨" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "Flip Legend 🦄", icon: "🦄", color: "from-pink-400 to-pink-600", description: "Legendary status achieved! 🌟" },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ name: "Sale God 🚀", icon: "🚀", color: "from-orange-400 to-red-600", description: "Ultimate reseller deity! ⚡👑" }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>];</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const levelIndex = Math.min(level - 1, levels.length - 1);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return levels[levelIndex];</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const getAchievements = (gameStats, items, analytics) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const achievements = [];</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (items.length &gt;= 1) achievements.push({ name: "First Steps 🎯", icon: "🎯", desc: "Added your first item! Let's go!" });</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (gameStats.soldCount &gt;= 1) achievements.push({ name: "Cha-Ching! 🎉", icon: "🎉", desc: "Made your first sale! The magic begins!" });</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (gameStats.soldCount &gt;= 10) achievements.push({ name: "Double Digits 🔥", icon: "🔥", desc: "10 sales strong! You're on fire!" });</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (gameStats.soldCount &gt;= 25) achievements.push({ name: "Quarter Century ⚡", icon: "⚡", desc: "25 sales! Absolutely crushing it!" });</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (gameStats.soldCount &gt;= 50) achievements.push({ name: "Half Hundred 💎", icon: "💎", desc: "50 sales! You're a diamond!" });</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (gameStats.totalProfit &gt;= 100) achievements.push({ name: "Profit Machine 💰", icon: "💰", desc: "Made $100+ profit! Money maker!" });</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (gameStats.totalProfit &gt;= 500) achievements.push({ name: "Big Baller 🏆", icon: "🏆", desc: "Made $500+ profit! Champion level!" });</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (gameStats.streak &gt;= 3) achievements.push({ name: "Hot Streak 🌡️", icon: "🌡️", desc: "3+ consecutive days with sales! Unstoppable!" });</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (gameStats.streak &gt;= 7) achievements.push({ name: "Week Warrior 📅", icon: "📅", desc: "7 days straight with sales! Amazing!" });</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (gameStats.streak &gt;= 30) achievements.push({ name: "Monthly Master 🗓️", icon: "🗓️", desc: "30 days of consecutive sales! Legendary!" });</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (gameStats.level &gt;= 5) achievements.push({ name: "Level Master 👑", icon: "👑", desc: "Reached level 5! Royalty status!" });</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Time-based achievements</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (analytics &amp;&amp; analytics.lifetime &amp;&amp; analytics.lifetime.avgTimeToSell &gt; 0) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (analytics.lifetime.avgTimeToSell &lt;= 1) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>achievements.push({ name: "Speed Demon ⚡", icon: "⚡", desc: "Average sell time under 1 day! Lightning fast!" });</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (analytics.lifetime.avgTimeToSell &lt;= 7) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>achievements.push({ name: "Quick Flipper 🔄", icon: "🔄", desc: "Average sell time under a week! Efficient!" });</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>return achievements;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Date helpers</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const getWeekStart = (date) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const d = new Date(date);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const day = d.getDay();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const diff = d.getDate() - day;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return new Date(d.setDate(diff));</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const getMonthStart = (date) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return new Date(date.getFullYear(), date.getMonth(), 1);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Analytics calculations</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const analytics = useMemo(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const now = new Date();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const weekStart = getWeekStart(now);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const monthStart = getMonthStart(now);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const filterByPeriod = (items, period) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (period === 'lifetime') return items;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const startDate = period === 'week' ? weekStart : monthStart;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return items.filter(item =&gt; new Date(item.dateAdded) &gt;= startDate);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const calculateStats = (filteredItems) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const soldItems = filteredItems.filter(item =&gt; item.status === 'sold');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const totalInvested = filteredItems.reduce((sum, item) =&gt; sum + item.paidPrice, 0);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const totalRevenue = soldItems.reduce((sum, item) =&gt; sum + item.soldPrice, 0);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const totalProfit = soldItems.reduce((sum, item) =&gt; sum + (item.soldPrice - item.paidPrice), 0);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Calculate average time to sell</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let avgTimeToSell = 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (soldItems.length &gt; 0) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const totalDays = soldItems.reduce((sum, item) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const dateAdded = new Date(item.dateAdded);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const dateSold = new Date(item.dateUpdated || item.dateAdded);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const daysDiff = Math.max(0, Math.floor((dateSold - dateAdded) / (1000 * 60 * 60 * 24)));</p>
+<p class="p1"><span class="Apple-converted-space">          </span>return sum + daysDiff;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}, 0);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>avgTimeToSell = totalDays / soldItems.length;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>return {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>totalItems: filteredItems.length,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>listedItems: filteredItems.filter(item =&gt; item.status === 'listed').length,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>soldItems: soldItems.length,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>totalInvested,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>totalRevenue,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>totalProfit,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>avgProfit: soldItems.length &gt; 0 ? totalProfit / soldItems.length : 0,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>sellThrough: filteredItems.length &gt; 0 ? (soldItems.length / filteredItems.length) * 100 : 0,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>avgTimeToSell</p>
+<p class="p1"><span class="Apple-converted-space">      </span>};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>return {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>week: calculateStats(filterByPeriod(items, 'week')),</p>
+<p class="p1"><span class="Apple-converted-space">      </span>month: calculateStats(filterByPeriod(items, 'month')),</p>
+<p class="p1"><span class="Apple-converted-space">      </span>lifetime: calculateStats(filterByPeriod(items, 'lifetime'))</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}, [items]);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const handleQuickAdd = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (!quickItem.name || !quickItem.paidPrice) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>alert('Please enter item name and paid price! 📝');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const newItem = {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>id: Date.now(),</p>
+<p class="p1"><span class="Apple-converted-space">      </span>...quickItem,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>paidPrice: parseFloat(quickItem.paidPrice) || 0,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>soldPrice: parseFloat(quickItem.soldPrice) || 0,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>dateAdded: new Date().toISOString().split('T')[0],</p>
+<p class="p1"><span class="Apple-converted-space">      </span>dateUpdated: new Date().toISOString()</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>setItems(prev =&gt; [newItem, ...prev]);</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Reset form</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setQuickItem({</p>
+<p class="p1"><span class="Apple-converted-space">      </span>name: '',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>paidPrice: '',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>soldPrice: '',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>status: 'listed'</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>setShowQuickAdd(false);</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>playSound('add');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>triggerCelebration('Added item! +10 XP 🎯');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const gameStats = calculateGameStats(items);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const levelInfo = getLevelInfo(gameStats.level);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const achievements = getAchievements(gameStats, items, analytics);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const SaleDialog = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const selectedItem = items.find(item =&gt; item.id === selectedItemId);</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>return (</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="bg-white rounded-2xl p-6 w-full max-w-md transform animate-bounce-in"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;h3 className="text-xl font-bold text-gray-800 mb-4"&gt;Mark as Sold 💰✨&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;p className="text-gray-600 mb-4"&gt;📦 {selectedItem?.name}&lt;/p&gt;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="space-y-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="relative"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;input</p>
+<p class="p1"><span class="Apple-converted-space">                </span>type="number"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>step="0.01"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>placeholder="How much did you sell it for? 💰"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>value={saleData.soldPrice}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>onChange={(e) =&gt; setSaleData(prev =&gt; ({...prev, soldPrice: e.target.value}))}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>autoFocus</p>
+<p class="p1"><span class="Apple-converted-space">              </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;📅 Date Listed&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;input</p>
+<p class="p1"><span class="Apple-converted-space">                </span>type="date"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>value={saleData.dateListed}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>onChange={(e) =&gt; setSaleData(prev =&gt; ({...prev, dateListed: e.target.value}))}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;🎉 Date Sold&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;input</p>
+<p class="p1"><span class="Apple-converted-space">                </span>type="date"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>value={saleData.dateSold}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>onChange={(e) =&gt; setSaleData(prev =&gt; ({...prev, dateSold: e.target.value}))}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>{/* Show calculated days to sell */}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{saleData.dateListed &amp;&amp; saleData.dateSold &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="bg-blue-50 p-3 rounded-xl"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;p className="text-sm text-blue-700 font-medium"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>⚡ Time to sell: {(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const days = Math.max(0, Math.floor((new Date(saleData.dateSold) - new Date(saleData.dateListed)) / (1000 * 60 * 60 * 24)));</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>return days === 0 ? 'Same day! 🚀' : days === 1 ? '1 day ⚡' : `${days} days`;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>})()}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>)}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="flex gap-3 mt-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">              </span>onClick={handleSaleSubmit}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 px-6 rounded-xl font-semibold text-lg transition-all transform hover:scale-105"</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>Mark Sold (+25 XP) 🎉</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">              </span>onClick={() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>setShowSaleDialog(false);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>setSaleData({</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>soldPrice: '',</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>dateListed: '',</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>dateSold: new Date().toISOString().split('T')[0]</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p1"><span class="Apple-converted-space">                </span>setSelectedItemId(null);</p>
+<p class="p1"><span class="Apple-converted-space">              </span>}}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>Cancel ❌</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const QuickAddForm = () =&gt; (</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div className="bg-white rounded-2xl p-6 w-full max-w-md transform animate-bounce-in"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;h3 className="text-xl font-bold text-gray-800 mb-4"&gt;Quick Add Item 📦✨&lt;/h3&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="space-y-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;input</p>
+<p class="p1"><span class="Apple-converted-space">            </span>type="text"</p>
+<p class="p1"><span class="Apple-converted-space">            </span>placeholder="Item name (e.g., Nike Shoes) 👟"</p>
+<p class="p1"><span class="Apple-converted-space">            </span>value={quickItem.name}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>onChange={(e) =&gt; setQuickItem(prev =&gt; ({...prev, name: e.target.value}))}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"</p>
+<p class="p1"><span class="Apple-converted-space">            </span>autoComplete="off"</p>
+<p class="p1"><span class="Apple-converted-space">            </span>autoFocus</p>
+<p class="p1"><span class="Apple-converted-space">          </span>/&gt;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="relative"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;input</p>
+<p class="p1"><span class="Apple-converted-space">              </span>type="number"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>step="0.01"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>placeholder="How much did you pay? 💸"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>value={quickItem.paidPrice}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>onChange={(e) =&gt; setQuickItem(prev =&gt; ({...prev, paidPrice: e.target.value}))}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>autoComplete="off"</p>
+<p class="p1"><span class="Apple-converted-space">            </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;select</p>
+<p class="p1"><span class="Apple-converted-space">            </span>value={quickItem.status}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>onChange={(e) =&gt; setQuickItem(prev =&gt; ({...prev, status: e.target.value}))}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value="listed"&gt;Just Listed 📋&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value="sold"&gt;Already Sold 💰&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/select&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>{quickItem.status === 'sold' &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="relative"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;input</p>
+<p class="p1"><span class="Apple-converted-space">                </span>type="number"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>step="0.01"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>placeholder="How much did you sell it for? 🤑"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>value={quickItem.soldPrice}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>onChange={(e) =&gt; setQuickItem(prev =&gt; ({...prev, soldPrice: e.target.value}))}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>autoComplete="off"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>)}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="flex gap-3 mt-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">            </span>type="button"</p>
+<p class="p1"><span class="Apple-converted-space">            </span>onClick={handleQuickAdd}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-3 px-6 rounded-xl font-semibold text-lg transition-all transform hover:scale-105"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>Add Item (+10 XP) 🎯</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">            </span>type="button"</p>
+<p class="p1"><span class="Apple-converted-space">            </span>onClick={() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">              </span>setShowQuickAdd(false);</p>
+<p class="p1"><span class="Apple-converted-space">              </span>// Reset form when closing</p>
+<p class="p1"><span class="Apple-converted-space">              </span>setQuickItem({</p>
+<p class="p1"><span class="Apple-converted-space">                </span>name: '',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>paidPrice: '',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>soldPrice: '',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>status: 'listed'</p>
+<p class="p1"><span class="Apple-converted-space">              </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>Cancel ❌</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const StatCard = ({ title, value, icon: Icon, color, subtitle, emoji }) =&gt; (</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div className={`bg-gradient-to-r ${color} text-white p-3 sm:p-6 rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-300 cursor-pointer`}&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div className="flex items-center justify-between mb-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="flex items-center gap-1 sm:gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;Icon className="h-4 w-4 sm:h-6 sm:w-6 opacity-80" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;span className="text-lg sm:text-2xl"&gt;{emoji}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;span className="text-xl sm:text-3xl font-bold animate-pulse"&gt;{value}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;h3 className="font-semibold text-sm sm:text-lg"&gt;{title}&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{subtitle &amp;&amp; &lt;p className="text-xs sm:text-sm opacity-90 mt-1"&gt;{subtitle}&lt;/p&gt;}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const currentStats = analytics[reportPeriod];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>return (</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div className="min-h-screen bg-gradient-to-br from-purple-100 via-blue-100 to-pink-100"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{/* Celebration Overlay */}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{showCelebration &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 py-4 rounded-2xl shadow-2xl text-2xl font-bold animate-bounce transform scale-110"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{lastAction}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>{/* Confetti effect */}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="absolute inset-0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{[...Array(20)].map((_, i) =&gt; (</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div</p>
+<p class="p1"><span class="Apple-converted-space">                </span>key={i}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>className="absolute animate-ping"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>style={{</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>left: `${Math.random() * 100}%`,</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>top: `${Math.random() * 100}%`,</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>animationDelay: `${Math.random() * 2}s`,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>{['🎉', '💰', '⭐', '🔥', '💎'][Math.floor(Math.random() * 5)]}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>))}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>)}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>{/* Header */}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div className="bg-white shadow-lg"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="max-w-6xl mx-auto px-4 py-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="flex flex-col sm:flex-row items-center justify-between"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="flex items-center gap-3 mb-3 sm:mb-0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="text-3xl sm:text-4xl animate-bounce"&gt;💰&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;h1 className="text-2xl sm:text-3xl font-bold text-gray-800"&gt;Make A Sale&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="text-xl sm:text-2xl animate-spin"&gt;⚡&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">              </span>onClick={() =&gt; setShowQuickAdd(true)}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold flex items-center gap-2 transition-all transform hover:scale-110 shadow-lg animate-pulse text-sm sm:text-base"</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;Plus className="h-4 w-4 sm:h-5 sm:w-5" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>Quick Add 🚀</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>{/* Level Progress Bar */}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="mt-4 bg-gradient-to-r from-purple-100 to-pink-100 p-4 sm:p-6 rounded-2xl shadow-lg"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="flex items-center gap-3 mb-3 sm:mb-0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div className="text-2xl sm:text-3xl animate-bounce"&gt;{levelInfo.icon}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;h3 className="font-bold text-gray-800 text-lg sm:text-xl"&gt;Level {gameStats.level}: {levelInfo.name}&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;p className="text-gray-600 text-sm sm:text-base"&gt;{levelInfo.description}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="text-right"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;p className="text-2xl sm:text-3xl font-bold text-purple-600 animate-pulse"&gt;{gameStats.points} XP ⭐&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;p className="text-gray-600 text-sm sm:text-base"&gt;{gameStats.pointsToNextLevel} to next level 🎯&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="w-full bg-white rounded-full h-4 shadow-inner"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>className="bg-gradient-to-r from-purple-500 to-pink-500 h-4 rounded-full transition-all duration-1000 ease-out relative overflow-hidden"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>style={{ width: `${((100 - gameStats.pointsToNextLevel) / 100) * 100}%` }}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div className="absolute inset-0 bg-white opacity-30 animate-pulse"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>{/* Navigation */}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="flex gap-2 sm:gap-4 mt-6 overflow-x-auto"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{[</p>
+<p class="p1"><span class="Apple-converted-space">              </span>{ id: 'dashboard', label: 'Dashboard 📊', shortLabel: 'Home 📊', icon: BarChart3 },</p>
+<p class="p1"><span class="Apple-converted-space">              </span>{ id: 'items', label: 'Items 📦', shortLabel: 'Items 📦', icon: Package },</p>
+<p class="p1"><span class="Apple-converted-space">              </span>{ id: 'achievements', label: 'Achievements 🏆', shortLabel: 'Awards 🏆', icon: Award }</p>
+<p class="p1"><span class="Apple-converted-space">            </span>].map(tab =&gt; (</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">                </span>key={tab.id}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>onClick={() =&gt; setActiveTab(tab.id)}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>className={`flex items-center gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all transform hover:scale-105 whitespace-nowrap text-sm sm:text-base ${</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>activeTab === tab.id</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>: 'bg-white text-gray-600 hover:bg-gray-100 shadow-md'</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}`}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;tab.icon className="h-4 w-4" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;span className="sm:hidden"&gt;{tab.shortLabel}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;span className="hidden sm:inline"&gt;{tab.label}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>))}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div className="max-w-6xl mx-auto px-2 sm:px-4 py-4 sm:py-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* Dashboard Tab */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{activeTab === 'dashboard' &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{/* Game Stats */}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;StatCard</p>
+<p class="p1"><span class="Apple-converted-space">                </span>title="Items Sold"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>value={gameStats.soldCount}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>icon={CheckCircle}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>color="from-green-400 to-emerald-600"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>subtitle="+25 XP each sale! 🎯"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>emoji="🎉"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>/&gt;</p>
+<p class="p2"><span class="Apple-converted-space">              </span></p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;StatCard</p>
+<p class="p1"><span class="Apple-converted-space">                </span>title="Listed Items"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>value={gameStats.listedCount}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>icon={Eye}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>color="from-blue-400 to-cyan-600"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>subtitle="Ready to flip! 📋"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>emoji="👀"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>/&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;StatCard</p>
+<p class="p1"><span class="Apple-converted-space">                </span>title="Daily Streak"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>value={gameStats.streak}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>icon={Zap}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>color="from-yellow-400 to-orange-600"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>subtitle="+15 XP streak bonus! 🔥"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>emoji="🌡️"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>/&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;StatCard</p>
+<p class="p1"><span class="Apple-converted-space">                </span>title="Current Level"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>value={gameStats.level}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>icon={Star}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>color="from-purple-400 to-pink-600"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>subtitle={levelInfo.name}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>emoji="👑"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>{/* Period Selector */}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 mb-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-0"&gt;Performance Report 📈&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div className="grid grid-cols-3 bg-gradient-to-r from-gray-100 to-gray-200 rounded-xl p-1 shadow-inner gap-1 sm:flex sm:gap-0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>{[</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>{ id: 'week', label: 'Week 📅', fullLabel: 'This Week 📅' },</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>{ id: 'month', label: 'Month 🗓️', fullLabel: 'This Month 🗓️' },</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>{ id: 'lifetime', label: 'All Time ⏰', fullLabel: 'All Time ⏰' }</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>].map(period =&gt; (</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>key={period.id}</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>onClick={() =&gt; setReportPeriod(period.id)}</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>className={`px-2 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition-all transform hover:scale-105 text-xs sm:text-sm ${</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>reportPeriod === period.id</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>: 'text-gray-600 hover:bg-white hover:shadow-md'</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>}`}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>&lt;span className="sm:hidden"&gt;{period.label}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>&lt;span className="hidden sm:inline"&gt;{period.fullLabel}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>))}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">              </span>{/* Stats Grid */}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;StatCard</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>title="Total Profit"</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>value={`$${currentStats.totalProfit.toFixed(2)}`}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>icon={TrendingUp}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>color="from-green-400 to-emerald-600"</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>subtitle={currentStats.soldItems &gt; 0 ? `Avg: $${currentStats.avgProfit.toFixed(2)} 📊` : ''}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>emoji="💰"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;StatCard</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>title="Revenue"</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>value={`$${currentStats.totalRevenue.toFixed(2)}`}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>icon={DollarSign}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>color="from-purple-400 to-indigo-600"</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>subtitle={`Invested: $${currentStats.totalInvested.toFixed(2)} 💸`}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>emoji="💎"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;StatCard</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>title="Sell Rate"</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>value={`${currentStats.sellThrough.toFixed(1)}%`}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>icon={Target}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>color="from-orange-400 to-red-600"</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>subtitle={`${currentStats.soldItems}/${currentStats.totalItems} sold 🎯`}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>emoji="🔥"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;StatCard</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>title="Avg Time to Sell"</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>value={currentStats.avgTimeToSell === 0 ? 'N/A' :<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>currentStats.avgTimeToSell &lt; 1 ? '&lt;1 day' :</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>currentStats.avgTimeToSell === 1 ? '1 day' :</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>`${Math.round(currentStats.avgTimeToSell)} days`</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>icon={Calendar}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>color="from-cyan-400 to-blue-600"</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>subtitle={currentStats.soldItems &gt; 0 ? `Based on ${currentStats.soldItems} sales ⏱️` : 'No sales yet ⏱️'}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>emoji="⏰"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>{/* Recent Activity */}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 sm:mb-6"&gt;Recent Activity 📱&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="space-y-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>{items.slice(0, 8).map(item =&gt; (</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div key={item.id} className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl hover:shadow-lg transition-all transform hover:scale-105"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div className="flex-1 min-w-0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>&lt;p className="font-semibold text-gray-800 text-sm sm:text-base truncate"&gt;📦 {item.name}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>&lt;p className="text-xs sm:text-sm text-gray-500"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>📅 {item.dateAdded}</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>{item.status === 'sold' &amp;&amp; item.dateUpdated &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>&lt;span className="ml-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>⚡ Sold in {(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                              </span>const days = Math.max(0, Math.floor((new Date(item.dateUpdated) - new Date(item.dateAdded)) / (1000 * 60 * 60 * 24)));</p>
+<p class="p1"><span class="Apple-converted-space">                              </span>return days === 0 ? 'same day' : days === 1 ? '1 day' : `${days} days`;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>})()}</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>)}</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div className="text-right ml-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>&lt;p className="font-bold text-gray-800 text-sm sm:text-base"&gt;💰 ${item.paidPrice.toFixed(2)}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>&lt;span className={`text-xs px-2 py-1 rounded-full font-semibold ${</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>item.status === 'sold' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>}`}&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>{item.status === 'sold' ? '✅ SOLD' : '👀 LISTED'}</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>))}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>{items.length === 0 &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div className="text-center py-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div className="text-6xl mb-4 animate-bounce"&gt;📦&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;p className="text-xl text-gray-500"&gt;No items yet! Click "Quick Add" to start earning XP! 🚀&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>)}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>)}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* Items Tab */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{activeTab === 'items' &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6"&gt;All Items 📋&lt;/h2&gt;</p>
+<p class="p2"><span class="Apple-converted-space">              </span></p>
+<p class="p1"><span class="Apple-converted-space">              </span>{items.length === 0 ? (</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div className="text-center py-16"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div className="text-8xl mb-6 animate-bounce"&gt;📦&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;h3 className="text-2xl font-bold text-gray-600 mb-3"&gt;No items yet! 🌟&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;p className="text-lg text-gray-500 mb-8"&gt;Start your reselling journey and earn XP! 🚀&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>onClick={() =&gt; setShowQuickAdd(true)}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-110 shadow-lg"</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>Add Your First Item (+10 XP) 🎯</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>) : (</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div className="space-y-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>{items.map(item =&gt; (</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 border-2 border-gray-100 rounded-2xl hover:shadow-lg transition-all transform hover:scale-102 bg-gradient-to-r from-white to-blue-50 gap-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>&lt;div className="flex-1 min-w-0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>&lt;h3 className="font-bold text-gray-800 text-base sm:text-lg truncate"&gt;📦 {item.name}&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>&lt;span className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-full font-semibold flex-shrink-0 ${</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>item.status === 'sold' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>}`}&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>{item.status === 'sold' ? '✅ SOLD' : '👀 LISTED'}</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;p className="text-gray-500 text-sm"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>📅 Added {item.dateAdded}</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>{item.status === 'sold' &amp;&amp; item.dateUpdated &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span className="block sm:inline sm:ml-2 text-green-600 font-medium"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                              </span>⚡ Sold in {(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>const days = Math.max(0, Math.floor((new Date(item.dateUpdated) - new Date(item.dateAdded)) / (1000 * 60 * 60 * 24)));</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>return days === 0 ? 'same day!' : days === 1 ? '1 day!' : `${days} days`;</p>
+<p class="p1"><span class="Apple-converted-space">                              </span>})()}</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>)}</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                      </span></p>
+<p class="p1"><span class="Apple-converted-space">                      </span>&lt;div className="flex items-center gap-3 sm:gap-6 justify-between sm:justify-end"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div className="text-center sm:text-right"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>&lt;p className="text-xs sm:text-sm text-gray-500"&gt;💸 Paid&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>&lt;p className="font-bold text-sm sm:text-lg"&gt;${item.paidPrice.toFixed(2)}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                        </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>{item.status === 'sold' ? (</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>&lt;&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div className="text-center sm:text-right"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                              </span>&lt;p className="text-xs sm:text-sm text-gray-500"&gt;💰 Sold&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                              </span>&lt;p className="font-bold text-sm sm:text-lg"&gt;${item.soldPrice.toFixed(2)}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div className="text-center sm:text-right"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                              </span>&lt;p className="text-xs sm:text-sm text-gray-500"&gt;📈 Profit&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                              </span>&lt;p className={`font-bold text-sm sm:text-xl ${</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>item.soldPrice - item.paidPrice &gt; 0 ? 'text-green-600' : 'text-red-600'</p>
+<p class="p1"><span class="Apple-converted-space">                              </span>}`}&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>{item.soldPrice - item.paidPrice &gt; 0 ? '💰' : '📉'} ${(item.soldPrice - item.paidPrice).toFixed(2)}</p>
+<p class="p1"><span class="Apple-converted-space">                              </span>&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>&lt;/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>) : (</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>onClick={() =&gt; openSaleDialog(item.id)}</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-bold transition-all transform hover:scale-110 shadow-lg animate-pulse text-xs sm:text-sm"</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span className="sm:hidden"&gt;Sold! 🎉&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span className="hidden sm:inline"&gt;Mark Sold (+25 XP) 🎉&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                          </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>)}</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>))}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>)}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>)}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* Achievements Tab */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{activeTab === 'achievements' &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{achievements.map((achievement, index) =&gt; (</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div key={index} className="bg-gradient-to-br from-yellow-100 to-orange-100 rounded-2xl shadow-xl p-4 sm:p-6 border-4 border-yellow-300 transform hover:scale-105 transition-all"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div className="text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div className="text-4xl sm:text-6xl mb-3 sm:mb-4 animate-bounce"&gt;{achievement.icon}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;h3 className="font-bold text-lg sm:text-xl text-gray-800 mb-2 sm:mb-3"&gt;{achievement.name}&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;p className="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base"&gt;{achievement.desc}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div className="bg-gradient-to-r from-green-400 to-emerald-500 text-white px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-bold shadow-lg"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>🎉 UNLOCKED 🎉</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>))}</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>{/* Locked Achievements Preview */}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{achievements.length &lt; 10 &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl shadow-lg p-4 sm:p-6 border-4 border-gray-300 opacity-60"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div className="text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div className="text-4xl sm:text-6xl mb-3 sm:mb-4"&gt;🔒&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;h3 className="font-bold text-lg sm:text-xl text-gray-600 mb-2 sm:mb-3"&gt;More to Unlock! 🎯&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;p className="text-gray-500 mb-3 sm:mb-4 text-sm sm:text-base"&gt;Keep selling to unlock more achievements! 🚀&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div className="bg-gray-400 text-white px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-bold"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>🔒 LOCKED 🔒</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>)}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>)}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>{showQuickAdd &amp;&amp; &lt;QuickAddForm /&gt;}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{showSaleDialog &amp;&amp; &lt;SaleDialog /&gt;}</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>{/* CSS for animations */}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;style jsx&gt;{`</p>
+<p class="p1"><span class="Apple-converted-space">        </span>@keyframes bounce-in {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }</p>
+<p class="p1"><span class="Apple-converted-space">          </span>50% { transform: scale(1.05) rotate(2deg); opacity: 0.8; }</p>
+<p class="p1"><span class="Apple-converted-space">          </span>70% { transform: scale(0.9) rotate(-1deg); opacity: 0.9; }</p>
+<p class="p1"><span class="Apple-converted-space">          </span>100% { transform: scale(1) rotate(0deg); opacity: 1; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.animate-bounce-in {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>animation: bounce-in 0.6s ease-out;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.hover\\:scale-102:hover {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>transform: scale(1.02);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>`}&lt;/style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>);</p>
+<p class="p1">};</p>
+<p class="p2"><br></p>
+<p class="p1">export default MakeASale;</p>
+</body>
+</html>
